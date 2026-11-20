@@ -213,7 +213,7 @@ function openCard() {
   const li = S.tasks.map(t => `<li class="${S.done[t.id] ? 'y' : ''}"><i>${S.done[t.id] ? '✓' : ''}</i><span>${esc(t.t)}</span></li>`).join('');
   modal(`<div class="cw"><div id="card" style="width:${w}px;height:${w * 16 / 9}px;font-size:${w / 27}px"><div class="c-b1"></div><div class="c-b2"></div>
   <div class="c-in"><div class="c-name">${esc(S.name)}</div><div class="c-day">ДЕНЬ</div><div class="c-big">${S.day} / ${S.total}</div><div class="c-st">🔥 ${S.streak}</div><ul>${li}</ul>
-  <div class="c-ft"><span>${dateStr({day:'numeric',month:'long',year:'numeric'})}</span><span>@твой_бот_в_тг</span></div></div></div><img id="shot" alt=""></div>
+  <div class="c-ft"><span>${dateStr({day:'numeric',month:'long',year:'numeric'})}</span><span>@monk_tracker_bot</span></div></div></div><img id="shot" alt=""></div>
   <p class="mu hint" id="hint"></p><button class="btn" data-dl>⬇ Скачать картинку</button><button class="btn ghost" data-close>Закрыть</button>`);
 }
 async function download(btn) {
