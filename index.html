@@ -75,6 +75,15 @@ input:focus{border-color:var(--ac)}
 .perks li{background:var(--gl);border:1px solid var(--st);border-radius:16px;padding:12px 14px;font-size:15px}
 .cw{position:relative;margin:0 auto;width:max-content}
 .hint{font-size:13px;margin:12px 0 2px;min-height:18px;text-align:center}
+.themes{display:flex;gap:8px;justify-content:center;margin-bottom:14px}
+.th{border:1px solid var(--st);background:var(--gl);border-radius:99px;padding:8px 16px;font:700 13px Manrope,sans-serif;transition:transform .15s,background .25s}
+.th:active{transform:scale(.94)}
+.th.on{background:var(--gr);color:#0F0F12;border-color:transparent}
+#card.gold{background:linear-gradient(160deg,#2a2110,#0d0b06 70%);border-color:rgba(255,210,74,.35)}
+#card.gold .c-b1{background:radial-gradient(circle,rgba(255,210,74,.4),transparent 65%)}
+#card.gold .c-b2{background:radial-gradient(circle,rgba(255,150,40,.28),transparent 65%)}
+#card.gold .c-big{color:#FFD24A}
+#card.gold li.y i{background:#FFD24A;border-color:#FFD24A}
 #card,#shot{border-radius:2.4em}
 #shot{position:absolute;top:0;left:0;opacity:0;pointer-events:none;transition:opacity .3s}
 #shot.on{opacity:1;pointer-events:auto}
@@ -145,6 +154,26 @@ const $ = s => document.querySelector(s);
 const app = $('#app');
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const KEY = 'monk_mode_v1';
+const WORKER_URL = 'СЮДА_ВСТАВИМ_ССЫЛКУ';
+let isPro = false, proUntil = 0;
+function loadPro() {
+  try {
+    proUntil = +localStorage.getItem('proUntil') || 0;
+    isPro = localStorage.getItem('isPro') === 'true';
+    if (isPro && proUntil && Date.now() > proUntil) {
+      localStorage.removeItem('isPro'); localStorage.removeItem('proUntil'); isPro = false; proUntil = 0;
+    }
+  } catch (e) {}
+}
+function setPro(plan) {
+  proUntil = plan === 'month' ? Math.max(Date.now(), proUntil) + 30 * 864e5 : 0;
+  isPro = true;
+  try {
+    localStorage.setItem('isPro', 'true');
+    if (proUntil) localStorage.setItem('proUntil', String(proUntil)); else localStorage.removeItem('proUntil');
+  } catch (e) {}
+}
+loadPro();
 const DEF = ['Выпить 2л воды', '45 мин спорта/активности', 'Чтение 15 страниц', 'Без сахара и фастфуда', '1 час без соцсетей перед сном'];
 const OPT = [[7, 'Перезагрузка'], [14, 'Железная дисциплина'], [30, 'Новая версия себя']];
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -177,21 +206,24 @@ function confirmBox(t, s, b, fn) {
 /* ---------- Views ---------- */
 function pickH() {
   return `<div><h1>Выбери свой режим</h1><p class="mu" style="margin-top:8px">Каждый день — чек-лист. Пропуск обнуляет стрик.</p></div>` +
-    OPT.map(([n, t]) => `<button class="box opt" data-act="start" data-n="${n}" data-t="${t}"><span class="num big">${n}</span><span><b>${t}</b><br><span class="mu">${n} дней</span></span></button>`).join('') +
-    `<button class="box opt" data-act="custom"><span class="num big">∞</span><span><b>Свой режим</b><br><span class="mu">Своё название и срок</span></span></button>` +
+    OPT.map(([n, t]) => `<button class="box opt" data-act="start" data-n="${n}" data-t="${t}"><span class="num big">${n}</span><span><b>${t}${n === 30 && !isPro ? ' 🔒' : ''}</b><br><span class="mu">${n} дней</span></span></button>`).join('') +
+    `<button class="box opt" data-act="custom"><span class="num big">∞</span><span><b>Свой режим${isPro ? '' : ' 🔒'}</b><br><span class="mu">Своё название и срок</span></span></button>` +
     (custom ? `<div class="box form"><input id="cn" maxlength="30" placeholder="Название режима"><input id="cd" type="number" inputmode="numeric" min="1" max="365" placeholder="Сколько дней (1–365)"><button class="btn" data-act="startc">Начать режим</button></div>` : '');
 }
 function mainH() {
+  const lockAdd = !isPro && S.tasks.length >= 5;
   const rows = S.tasks.map(t => edit
     ? `<div class="task ed"><input class="tin" data-id="${t.id}" value="${esc(t.t)}" maxlength="60"><button class="x" data-act="del" data-id="${t.id}">✕</button></div>`
     : `<div class="task${S.done[t.id] ? ' done' : ''}" data-act="tg" data-id="${t.id}"><span class="cb"></span><span class="tt">${esc(t.t)}</span></div>`).join('');
   return `<div class="top"><span class="chip">${esc(S.name)}</span><span><button class="ib" data-act="edit">${edit ? '✓' : '✎'}</button><button class="ib" data-act="reset">↺</button></span></div>
   <div class="box hero"><p class="mu">${dateStr({day:'numeric',month:'long'})}</p><h1>День ${S.day} из ${S.total}</h1><div class="bar"><i id="bar"></i></div><div class="row"><span class="mu">Пройдено</span><b id="pct">0%</b></div></div>
   <div class="grid2"><div class="box tile"><span class="fire">🔥</span><b class="num" id="stk">0</b><span class="mu">дней подряд</span></div><div class="box tile"><span>✅</span><b class="num" id="cnt">0/0</b><span class="mu">задач сегодня</span></div></div>
-  <div class="box">${rows || '<p class="mu">Добавь первую задачу</p>'}${edit ? '<div class="add"><input id="nt" maxlength="60" placeholder="Новая задача"><button class="btn sm" data-act="add">+</button></div>' : ''}</div>
+  <div class="box">${rows || '<p class="mu">Добавь первую задачу</p>'}${edit ? `<div class="add"><input id="nt" maxlength="60" placeholder="${lockAdd ? 'Больше 5 задач — в PRO' : 'Новая задача'}"><button class="btn sm" data-act="add">${lockAdd ? '🔒' : '+'}</button></div>` : ''}</div>
   <button class="btn" id="fin" data-act="fin">${S.day >= S.total ? 'Завершить челлендж' : 'Завершить день и перейти к следующему'}</button>
   <button class="btn ghost" data-act="card">📸 Создать карточку дня</button>
-  <button class="pro" data-act="pro"><span class="badge">СКОРО</span><b>Закрытые челленджи и ИИ-наставник (PRO)</b><span class="mu">Оплата через Telegram Stars ⭐</span></button>`;
+  ${isPro
+    ? `<div class="pro"><b>PRO активен ✨</b><span class="mu">${proUntil ? 'Действует до ' + new Date(proUntil).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }) : 'Навсегда'}</span></div>`
+    : `<button class="pro" data-act="pro"><b>PRO: все режимы, золотая карточка, больше задач</b><span class="mu">От 150 ⭐ через Telegram Stars</span></button>`}`;
 }
 function winH() {
   return `<div class="box hero win"><div class="trophy">🏆</div><h1>Челлендж пройден!</h1><p class="mu">${esc(S.name)} · ${S.total} дн. · стрик 🔥 ${S.streak}</p></div>
@@ -232,15 +264,32 @@ function endDay(all) {
   edit = false; save(); ok(); render();
 }
 function openPro() {
-  modal(`<span class="badge">СКОРО</span><h2>PRO-режим ⭐</h2><p class="mu">Подписка через Telegram Stars. Первые участники получат доступ раньше всех.</p>
-  <ul class="perks"><li>🔒 Закрытые челленджи: 75 Hard, Монах, Подъём в 5:00</li><li>🤖 ИИ-наставник разбирает твой день и поддерживает</li><li>🎨 Эксклюзивные темы карточек для TikTok</li><li>📊 Статистика и история всех дней</li><li>👥 Челленджи с друзьями и рейтинг</li></ul>
-  <button class="btn" data-want>Хочу доступ</button><button class="btn ghost" data-close>Позже</button>`);
+  modal(`<h2>PRO-режим ⭐</h2><p class="mu">Оплата Telegram Stars. Открывает всё, что отмечено замком.</p>
+  <ul class="perks"><li>🔒 Режим «30 дней: Новая версия себя»</li><li>🔒 «Свой режим»: своё название и срок</li><li>🔒 Больше 5 задач в день</li><li>🔒 Золотая тема карточки дня</li></ul>
+  <button class="btn" data-plan="month">1 месяц PRO — 150 ⭐️</button><button class="btn ghost" data-plan="forever">Навсегда — 450 ⭐️</button><button class="btn ghost" data-close>Закрыть</button>`);
 }
-function openCard() {
+async function buy(plan, btn) {
+  if (isPro && !proUntil) return toast('У тебя уже PRO навсегда');
+  if (!tg || !tg.openInvoice) return toast('Оплата работает только внутри Telegram');
+  if (WORKER_URL.indexOf('http') !== 0) return toast('Не указан WORKER_URL');
+  const old = btn.textContent; btn.disabled = true; btn.textContent = 'Готовлю счёт…';
+  try {
+    const r = await fetch(WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ plan }) });
+    const d = await r.json();
+    if (!d.invoiceLink) throw new Error(d.error || 'no invoiceLink');
+    tg.openInvoice(d.invoiceLink, status => {
+      if (status === 'paid') { setPro(plan); closeM(); ok(); toast('PRO активирован 🎉'); render(false); }
+      else if (status === 'failed') toast('Оплата не прошла');
+      else if (status === 'pending') toast('Платёж обрабатывается');
+    });
+  } catch (e) { toast('Не удалось создать счёт'); }
+  btn.disabled = false; btn.textContent = old;
+}
+function openCard(gold = false) {
   const ph = $('#phone'), W = Math.min(innerWidth, ph.clientWidth), H = Math.min(innerHeight, ph.clientHeight);
-  const w = Math.max(160, Math.min(270, W * .74, (H - 220) * 9 / 16));
+  const w = Math.max(160, Math.min(270, W * .74, (H - 270) * 9 / 16));
   const li = S.tasks.map(t => `<li class="${S.done[t.id] ? 'y' : ''}"><i>${S.done[t.id] ? '✓' : ''}</i><span>${esc(t.t)}</span></li>`).join('');
-  modal(`<div class="cw"><div id="card" style="width:${w}px;height:${w * 16 / 9}px;font-size:${w / 27}px"><div class="c-b1"></div><div class="c-b2"></div>
+  modal(`<div class="themes"><button class="th${gold ? '' : ' on'}" data-theme="neon">Неон</button><button class="th${gold ? ' on' : ''}" data-theme="gold">Золото${isPro ? '' : ' 🔒'}</button></div><div class="cw"><div id="card" class="${gold ? 'gold' : ''}" style="width:${w}px;height:${w * 16 / 9}px;font-size:${w / 27}px"><div class="c-b1"></div><div class="c-b2"></div>
   <div class="c-in"><div class="c-name">${esc(S.name)}</div><div class="c-day">ДЕНЬ</div><div class="c-big">${S.day} / ${S.total}</div><div class="c-st">🔥 ${S.streak}</div><ul>${li}</ul>
   <div class="c-ft"><span>${dateStr({day:'numeric',month:'long',year:'numeric'})}</span><span>@твой_бот_в_тг</span></div></div></div><img id="shot" alt=""></div>
   <p class="mu hint" id="hint"></p><button class="btn" data-dl>⬇ Скачать картинку</button><button class="btn ghost" data-close>Закрыть</button>`);
@@ -269,15 +318,17 @@ async function download(btn) {
 /* ---------- Events ---------- */
 const A = {
   tg(el) { const id = el.dataset.id; S.done[id] = !S.done[id]; S.doneDate = dk(); save(); el.classList.toggle('done', !!S.done[id]); refresh(); },
-  start(el) { begin(el.dataset.n + ' дней: ' + el.dataset.t, +el.dataset.n); },
-  custom() { custom = !custom; render(false); },
+  start(el) { if (+el.dataset.n === 30 && !isPro) return openPro(); begin(el.dataset.n + ' дней: ' + el.dataset.t, +el.dataset.n); },
+  custom() { if (!isPro) return openPro(); custom = !custom; render(false); },
   startc() {
+    if (!isPro) return openPro();
     const n = $('#cn').value.trim(), d = Math.min(365, parseInt($('#cd').value) || 0);
     if (!n || d < 1) return toast('Введи название и срок');
     begin(n, d);
   },
   edit() { edit = !edit; render(false); },
   add() {
+    if (!isPro && S.tasks.length >= 5) return openPro();
     const v = $('#nt').value.trim(); if (!v) return;
     S.tasks.push({ id: uid(), t: v }); save(); render(false); setTimeout(() => $('#nt') && $('#nt').focus(), 30);
   },
@@ -286,7 +337,7 @@ const A = {
     if (S.tasks.length && S.tasks.every(t => S.done[t.id])) return endDay(true);
     confirmBox('Не всё выполнено', 'Если завершить день сейчас, стрик обнулится.', 'Всё равно завершить', () => endDay(false));
   },
-  card: openCard,
+  card() { openCard(); },
   pro: openPro,
   reset() { confirmBox('Сменить челлендж?', 'Текущий прогресс будет сброшен. Задачи сохранятся.', 'Сменить', restart); },
   restart
@@ -298,7 +349,8 @@ document.addEventListener('click', e => {
 $('#ov').addEventListener('click', e => {
   const t = e.target;
   if (t.closest('[data-yes]')) { hap(); closeM(); cb && cb(); cb = null; }
-  else if (t.closest('[data-want]')) { hap(); S.pro = true; save(); closeM(); ok(); toast('Записали! Ты в списке 🔥'); }
+  else if (t.closest('[data-plan]')) { hap(); const el = t.closest('[data-plan]'); buy(el.dataset.plan, el); }
+  else if (t.closest('[data-theme]')) { hap(); const g = t.closest('[data-theme]').dataset.theme === 'gold'; if (g && !isPro) openPro(); else openCard(g); }
   else if (t.closest('[data-dl]')) { hap(); download(t.closest('[data-dl]')); }
   else if (t.id === 'ov' || t.closest('[data-close]')) { hap(); closeM(); }
 });
