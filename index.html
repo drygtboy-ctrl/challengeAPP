@@ -154,7 +154,8 @@ const $ = s => document.querySelector(s);
 const app = $('#app');
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const KEY = 'monk_mode_v1';
-const WORKER_URL = 'СЮДА_ВСТАВИМ_ССЫЛКУ';
+const WORKER_URL = 'https://monk-pay.drygtboy.workers.dev
+';
 let isPro = false, proUntil = 0;
 function loadPro() {
   try {
