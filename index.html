@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0F0F12">
+<title>Режим Монаха</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Unbounded:wght@600;800&display=swap" rel="stylesheet">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+:root{--bg:#0F0F12;--gl:rgba(255,255,255,.06);--st:rgba(255,255,255,.1);--ac:#C6FF3D;--cy:#3DF2FF;--pk:#FF4FD8;--mu:rgba(255,255,255,.55);--gr:linear-gradient(135deg,#C6FF3D,#3DF2FF)}
+html,body{background:var(--bg);color:#F4F4F6;font:600 16px/1.35 Manrope,system-ui,sans-serif;min-height:100%}
+body{padding:calc(14px + env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom));overflow-x:hidden}
+body::before{content:"";position:fixed;top:0;left:0;right:0;bottom:0;z-index:-1;background:radial-gradient(60% 40% at 95% 0,rgba(198,255,61,.14),transparent),radial-gradient(60% 40% at 0 100%,rgba(255,79,216,.13),transparent)}
+button{font-family:inherit;color:inherit;cursor:pointer}
+#app{max-width:480px;margin:0 auto;display:grid;gap:12px}
+h1,h2,.num{font-family:Unbounded,Manrope,sans-serif;font-weight:800}
+h1{font-size:28px;line-height:1.15}
+.mu{color:var(--mu)}
+.box{background:var(--gl);border:1px solid var(--st);border-radius:24px;padding:18px;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.enter>*{animation:rise .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*.06s)}
+.btn{display:block;width:100%;border:0;border-radius:18px;padding:16px;font:800 16px Manrope,sans-serif;color:#0F0F12;background:var(--gr);box-shadow:0 8px 30px rgba(198,255,61,.25);transition:transform .15s,box-shadow .3s,background .3s}
+.btn:active{transform:scale(.96)}
+.btn[disabled]{opacity:.6}
+.btn.ghost{background:var(--gl);color:#fff;border:1px solid var(--st);box-shadow:none}
+.btn.sm{width:56px;padding:0;font-size:26px;flex:none}
+input{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--st);border-radius:14px;padding:14px;color:#fff;font:600 16px Manrope,sans-serif;outline:0;transition:border-color .2s}
+input:focus{border-color:var(--ac)}
+.opt{display:flex;align-items:center;gap:16px;text-align:left;width:100%;font-size:17px;transition:transform .15s,border-color .2s}
+.opt:active{transform:scale(.97);border-color:var(--ac)}
+.big{font-size:34px;color:var(--ac);min-width:58px}
+.form{display:grid;gap:10px}
+.top{display:flex;justify-content:space-between;align-items:center}
+.chip{background:var(--gl);border:1px solid var(--st);border-radius:99px;padding:8px 14px;font-size:13px;max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ib{width:40px;height:40px;border-radius:14px;border:1px solid var(--st);background:var(--gl);font-size:18px;margin-left:8px;transition:transform .15s}
+.ib:active{transform:scale(.88)}
+.hero h1{margin:6px 0 16px}
+.bar{height:14px;border-radius:9px;background:rgba(255,255,255,.08);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--gr);border-radius:9px;transition:width .7s cubic-bezier(.2,.8,.2,1);box-shadow:0 0 18px rgba(198,255,61,.6)}
+.row{display:flex;justify-content:space-between;margin-top:10px;font-size:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tile{display:flex;flex-direction:column;gap:4px}
+.tile .num{font-size:32px}
+.tile>span:first-child{font-size:26px;width:fit-content}
+.fire{animation:flame 1.4s infinite alternate}
+.task{display:flex;align-items:center;gap:14px;padding:14px 2px;border-bottom:1px solid var(--st);cursor:pointer;transition:transform .15s}
+.task:last-child{border:0}
+.task:active{transform:scale(.98)}
+.cb{flex:none;width:32px;height:32px;border-radius:11px;border:2px solid rgba(255,255,255,.3);display:grid;place-items:center;transition:background .25s,border-color .25s}
+.cb::after{content:"";width:7px;height:14px;border:solid #0F0F12;border-width:0 3px 3px 0;transform:translateY(-1px) rotate(45deg) scale(0);transition:transform .25s cubic-bezier(.3,1.6,.5,1)}
+.done .cb{background:var(--gr);border-color:transparent;animation:pop .4s}
+.done .cb::after{transform:translateY(-1px) rotate(45deg) scale(1)}
+.tt{font-size:17px;transition:color .25s}
+.done .tt{color:var(--mu);text-decoration:line-through}
+.task.ed{cursor:default;gap:8px;padding:6px 0}
+.x{flex:none;width:46px;height:46px;border-radius:14px;border:0;background:rgba(255,80,100,.15);color:#ff6b7a;font-size:16px}
+.add{display:flex;gap:8px;margin-top:12px}
+.badge{display:inline-block;background:var(--pk);color:#0F0F12;font:800 11px Manrope,sans-serif;padding:4px 10px;border-radius:99px;width:fit-content}
+.pro{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;width:100%;border-radius:24px;padding:18px;border:1px solid rgba(255,255,255,.18);background:linear-gradient(120deg,rgba(255,79,216,.22),rgba(61,242,255,.16));font-size:16px;transition:transform .15s}
+.pro:active{transform:scale(.97)}
+.win{text-align:center}
+.trophy{font-size:64px;animation:flame 1.2s infinite alternate}
+.win p{margin-top:8px}
+#ov{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,.72);display:flex;align-items:flex-end;justify-content:center;opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s;z-index:10}
+#ov.on{opacity:1;visibility:visible}
+.sheet{width:100%;max-width:480px;max-height:94dvh;overflow:auto;background:#16161b;border:1px solid var(--st);border-radius:28px 28px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom))}
+#ov.on .sheet{animation:up .35s cubic-bezier(.2,.8,.2,1)}
+.sheet h2{font-size:22px;margin:10px 0 6px}
+.sheet .btn{margin-top:10px}
+.perks{list-style:none;padding:0;display:grid;gap:10px;margin:16px 0 8px}
+.perks li{background:var(--gl);border:1px solid var(--st);border-radius:16px;padding:12px 14px;font-size:15px}
+.cw{position:relative;margin:0 auto;width:max-content}
+.hint{font-size:13px;margin:12px 0 2px;min-height:18px;text-align:center}
+#card,#shot{border-radius:2.4em}
+#shot{position:absolute;top:0;left:0;opacity:0;pointer-events:none;transition:opacity .3s}
+#shot.on{opacity:1;pointer-events:auto}
+#card{position:relative;overflow:hidden;background:linear-gradient(160deg,#17171f,#0b0b0e 70%);border:1px solid rgba(255,255,255,.12);color:#fff;font-family:Manrope,sans-serif}
+.c-b1,.c-b2{position:absolute;width:26em;height:26em;border-radius:50%}
+.c-b1{top:-9em;right:-10em;background:radial-gradient(circle,rgba(198,255,61,.35),transparent 65%)}
+.c-b2{bottom:-9em;left:-10em;background:radial-gradient(circle,rgba(255,79,216,.3),transparent 65%)}
+.c-in{position:relative;height:100%;padding:2.6em 2.2em 2em;display:flex;flex-direction:column;text-align:left}
+.c-name{font:800 1.4em/1.2 Unbounded,sans-serif}
+.c-day{margin-top:1.8em;font-size:1em;letter-spacing:.4em;color:rgba(255,255,255,.55);font-weight:800}
+.c-big{font:800 3.3em/1.1 Unbounded,sans-serif;color:#C6FF3D;white-space:nowrap}
+.c-st{margin:.6em 0 1.4em;font-weight:800;font-size:1.2em}
+#card ul{list-style:none;padding:0;flex:1;overflow:hidden;display:flex;flex-direction:column;gap:.7em}
+#card li{display:flex;align-items:center;gap:.8em;font-size:1.15em;font-weight:700;color:rgba(255,255,255,.4)}
+#card li.y{color:#fff}
+#card li i{flex:none;width:1.6em;height:1.6em;border-radius:.5em;border:2px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-style:normal;font-size:.9em;color:#0F0F12}
+#card li.y i{background:#C6FF3D;border-color:#C6FF3D}
+.c-ft{display:flex;justify-content:space-between;gap:.5em;font-size:.85em;color:rgba(255,255,255,.5);padding-top:1em;border-top:1px solid rgba(255,255,255,.1);font-weight:700}
+#toast{position:fixed;top:calc(16px + env(safe-area-inset-top));left:50%;transform:translate(-50%,-30px);background:#fff;color:#0F0F12;padding:12px 18px;border-radius:99px;font-weight:800;font-size:14px;opacity:0;transition:.3s;z-index:20;pointer-events:none;white-space:nowrap}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+@keyframes rise{from{opacity:0;transform:translateY(18px) scale(.98)}}
+@keyframes pop{40%{transform:scale(1.25)}}
+@keyframes flame{to{transform:scale(1.15) rotate(-6deg)}}
+@keyframes up{from{transform:translateY(60px);opacity:0}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="ov"></div>
+<div id="toast"></div>
+<script>
+const tg = window.Telegram && Telegram.WebApp;
+try {
+  tg.ready(); tg.expand();
+  tg.setHeaderColor('#0F0F12'); tg.setBackgroundColor('#0F0F12');
+  if (tg.disableVerticalSwipes) tg.disableVerticalSwipes();
+} catch (e) {}
+const hap = () => { try { tg.HapticFeedback.impactOccurred('light'); } catch (e) {} };
+const ok = () => { try { tg.HapticFeedback.notificationOccurred('success'); } catch (e) {} };
+const $ = s => document.querySelector(s);
+const app = $('#app');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const KEY = 'monk_mode_v1';
+const DEF = ['Выпить 2л воды', '45 мин спорта/активности', 'Чтение 15 страниц', 'Без сахара и фастфуда', '1 час без соцсетей перед сном'];
+const OPT = [[7, 'Перезагрузка'], [14, 'Железная дисциплина'], [30, 'Новая версия себя']];
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const p2 = n => String(n).padStart(2, '0');
+const dk = (d = new Date()) => d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate());
+const gap = (a, b) => Math.round((new Date(b) - new Date(a)) / 864e5);
+const dateStr = o => new Date().toLocaleDateString('ru-RU', o);
+
+let S = null, edit = false, custom = false, tk = null, cb = null, tt;
+try { S = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+
+if (S && !S.won) {
+  if (S.lastFin && gap(S.lastFin, dk()) > 1) S.streak = 0;
+  if (S.doneDate && S.doneDate !== dk()) { S.done = {}; S.doneDate = null; }
+  save();
+}
+
+function toast(m) {
+  const t = $('#toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(() => t.classList.remove('on'), 2200);
+}
+function modal(h) { const o = $('#ov'); o.innerHTML = '<div class="sheet">' + h + '</div>'; o.classList.add('on'); }
+function closeM() { $('#ov').classList.remove('on'); }
+function confirmBox(t, s, b, fn) {
+  cb = fn;
+  modal(`<h2>${t}</h2><p class="mu">${s}</p><button class="btn" data-yes>${b}</button><button class="btn ghost" data-close>Отмена</button>`);
+}
+
+/* ---------- Views ---------- */
+function pickH() {
+  return `<div><h1>Выбери свой режим</h1><p class="mu" style="margin-top:8px">Каждый день — чек-лист. Пропуск обнуляет стрик.</p></div>` +
+    OPT.map(([n, t]) => `<button class="box opt" data-act="start" data-n="${n}" data-t="${t}"><span class="num big">${n}</span><span><b>${t}</b><br><span class="mu">${n} дней</span></span></button>`).join('') +
+    `<button class="box opt" data-act="custom"><span class="num big">∞</span><span><b>Свой режим</b><br><span class="mu">Своё название и срок</span></span></button>` +
+    (custom ? `<div class="box form"><input id="cn" maxlength="30" placeholder="Название режима"><input id="cd" type="number" inputmode="numeric" min="1" max="365" placeholder="Сколько дней (1–365)"><button class="btn" data-act="startc">Начать режим</button></div>` : '');
+}
+function mainH() {
+  const rows = S.tasks.map(t => edit
+    ? `<div class="task ed"><input class="tin" data-id="${t.id}" value="${esc(t.t)}" maxlength="60"><button class="x" data-act="del" data-id="${t.id}">✕</button></div>`
+    : `<div class="task${S.done[t.id] ? ' done' : ''}" data-act="tg" data-id="${t.id}"><span class="cb"></span><span class="tt">${esc(t.t)}</span></div>`).join('');
+  return `<div class="top"><span class="chip">${esc(S.name)}</span><span><button class="ib" data-act="edit">${edit ? '✓' : '✎'}</button><button class="ib" data-act="reset">↺</button></span></div>
+  <div class="box hero"><p class="mu">${dateStr({day:'numeric',month:'long'})}</p><h1>День ${S.day} из ${S.total}</h1><div class="bar"><i id="bar"></i></div><div class="row"><span class="mu">Пройдено</span><b id="pct">0%</b></div></div>
+  <div class="grid2"><div class="box tile"><span class="fire">🔥</span><b class="num" id="stk">0</b><span class="mu">дней подряд</span></div><div class="box tile"><span>✅</span><b class="num" id="cnt">0/0</b><span class="mu">задач сегодня</span></div></div>
+  <div class="box">${rows || '<p class="mu">Добавь первую задачу</p>'}${edit ? '<div class="add"><input id="nt" maxlength="60" placeholder="Новая задача"><button class="btn sm" data-act="add">+</button></div>' : ''}</div>
+  <button class="btn" id="fin" data-act="fin">${S.day >= S.total ? 'Завершить челлендж' : 'Завершить день и перейти к следующему'}</button>
+  <button class="btn ghost" data-act="card">📸 Создать карточку дня</button>
+  <button class="pro" data-act="pro"><span class="badge">СКОРО</span><b>Закрытые челленджи и ИИ-наставник (PRO)</b><span class="mu">Оплата через Telegram Stars ⭐</span></button>`;
+}
+function winH() {
+  return `<div class="box hero win"><div class="trophy">🏆</div><h1>Челлендж пройден!</h1><p class="mu">${esc(S.name)} · ${S.total} дн. · стрик 🔥 ${S.streak}</p></div>
+  <button class="btn" data-act="card">📸 Создать карточку</button>
+  <button class="btn ghost" data-act="restart">Начать новый челлендж</button>`;
+}
+function render(anim = true) {
+  app.className = anim ? 'enter' : '';
+  app.innerHTML = !S ? pickH() : S.won ? winH() : mainH();
+  [...app.children].forEach((c, i) => c.style.setProperty('--i', i));
+  setTimeout(refresh, 60);
+}
+function refresh() {
+  const b = $('#bar'); if (!S || S.won || !b) return;
+  const n = S.tasks.length, d = S.tasks.filter(t => S.done[t.id]).length;
+  const pct = Math.min(100, Math.round(((S.day - 1) + (n ? d / n : 0)) / S.total * 100));
+  b.style.width = pct + '%';
+  $('#pct').textContent = pct + '%';
+  $('#cnt').textContent = d + '/' + n;
+  $('#stk').textContent = S.streak;
+  $('#fin').classList.toggle('ghost', !(n && d === n));
+}
+
+/* ---------- Logic ---------- */
+function begin(name, total) {
+  S = { name, total, day: 1, streak: 0, tasks: (tk || DEF).map(t => ({ id: uid(), t })), done: {}, lastFin: null, doneDate: null, won: false, pro: false };
+  tk = null; custom = false; save(); ok(); render();
+}
+function restart() {
+  tk = S ? S.tasks.map(t => t.t) : null; S = null; edit = false; custom = false;
+  try { localStorage.removeItem(KEY); } catch (e) {}
+  render();
+}
+function endDay(all) {
+  S.streak = all ? S.streak + 1 : 0; S.lastFin = dk();
+  if (S.day >= S.total) S.won = true; else { S.day++; S.done = {}; S.doneDate = null; }
+  edit = false; save(); ok(); render();
+}
+function openPro() {
+  modal(`<span class="badge">СКОРО</span><h2>PRO-режим ⭐</h2><p class="mu">Подписка через Telegram Stars. Первые участники получат доступ раньше всех.</p>
+  <ul class="perks"><li>🔒 Закрытые челленджи: 75 Hard, Монах, Подъём в 5:00</li><li>🤖 ИИ-наставник разбирает твой день и поддерживает</li><li>🎨 Эксклюзивные темы карточек для TikTok</li><li>📊 Статистика и история всех дней</li><li>👥 Челленджи с друзьями и рейтинг</li></ul>
+  <button class="btn" data-want>Хочу доступ</button><button class="btn ghost" data-close>Позже</button>`);
+}
+function openCard() {
+  const w = Math.max(160, Math.min(270, innerWidth * .74, (innerHeight - 220) * 9 / 16));
+  const li = S.tasks.map(t => `<li class="${S.done[t.id] ? 'y' : ''}"><i>${S.done[t.id] ? '✓' : ''}</i><span>${esc(t.t)}</span></li>`).join('');
+  modal(`<div class="cw"><div id="card" style="width:${w}px;height:${w * 16 / 9}px;font-size:${w / 27}px"><div class="c-b1"></div><div class="c-b2"></div>
+  <div class="c-in"><div class="c-name">${esc(S.name)}</div><div class="c-day">ДЕНЬ</div><div class="c-big">${S.day} / ${S.total}</div><div class="c-st">🔥 ${S.streak}</div><ul>${li}</ul>
+  <div class="c-ft"><span>${dateStr({day:'numeric',month:'long',year:'numeric'})}</span><span>@твой_бот_в_тг</span></div></div></div><img id="shot" alt=""></div>
+  <p class="mu hint" id="hint"></p><button class="btn" data-dl>⬇ Скачать картинку</button><button class="btn ghost" data-close>Закрыть</button>`);
+}
+async function download(btn) {
+  btn.disabled = true; btn.textContent = 'Рисую картинку…';
+  try {
+    const card = $('#card');
+    const cv = await html2canvas(card, { scale: 1080 / card.offsetWidth, backgroundColor: '#0F0F12', useCORS: true });
+    const url = cv.toDataURL('image/png');
+    const img = $('#shot'); img.style.cssText = card.style.cssText; img.src = url; img.classList.add('on');
+    const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
+    const f = new File([blob], 'day-' + S.day + '.png', { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [f] })) {
+      try { await navigator.share({ files: [f] }); } catch (e) {}
+    } else {
+      const a = document.createElement('a'); a.href = url; a.download = f.name;
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+    $('#hint').textContent = 'Не сохранилось? Удерживай картинку и выбери «Сохранить».';
+    ok();
+  } catch (e) { toast('Не получилось создать картинку'); }
+  btn.disabled = false; btn.textContent = '⬇ Скачать картинку';
+}
+
+/* ---------- Events ---------- */
+const A = {
+  tg(el) { const id = el.dataset.id; S.done[id] = !S.done[id]; S.doneDate = dk(); save(); el.classList.toggle('done', !!S.done[id]); refresh(); },
+  start(el) { begin(el.dataset.n + ' дней: ' + el.dataset.t, +el.dataset.n); },
+  custom() { custom = !custom; render(false); },
+  startc() {
+    const n = $('#cn').value.trim(), d = Math.min(365, parseInt($('#cd').value) || 0);
+    if (!n || d < 1) return toast('Введи название и срок');
+    begin(n, d);
+  },
+  edit() { edit = !edit; render(false); },
+  add() {
+    const v = $('#nt').value.trim(); if (!v) return;
+    S.tasks.push({ id: uid(), t: v }); save(); render(false); setTimeout(() => $('#nt') && $('#nt').focus(), 30);
+  },
+  del(el) { S.tasks = S.tasks.filter(t => t.id !== el.dataset.id); delete S.done[el.dataset.id]; save(); render(false); },
+  fin() {
+    if (S.tasks.length && S.tasks.every(t => S.done[t.id])) return endDay(true);
+    confirmBox('Не всё выполнено', 'Если завершить день сейчас, стрик обнулится.', 'Всё равно завершить', () => endDay(false));
+  },
+  card: openCard,
+  pro: openPro,
+  reset() { confirmBox('Сменить челлендж?', 'Текущий прогресс будет сброшен. Задачи сохранятся.', 'Сменить', restart); },
+  restart
+};
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (el && A[el.dataset.act]) { hap(); A[el.dataset.act](el); }
+});
+$('#ov').addEventListener('click', e => {
+  const t = e.target;
+  if (t.closest('[data-yes]')) { hap(); closeM(); cb && cb(); cb = null; }
+  else if (t.closest('[data-want]')) { hap(); S.pro = true; save(); closeM(); ok(); toast('Записали! Ты в списке 🔥'); }
+  else if (t.closest('[data-dl]')) { hap(); download(t.closest('[data-dl]')); }
+  else if (t.id === 'ov' || t.closest('[data-close]')) { hap(); closeM(); }
+});
+document.addEventListener('input', e => {
+  if (e.target.classList.contains('tin')) {
+    const t = S.tasks.find(x => x.id === e.target.dataset.id);
+    if (t) { t.t = e.target.value; save(); }
+  }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'nt') A.add(); });
+
+render();
+</script>
+</body>
+</html>
