@@ -12,7 +12,8 @@
 <style>
 *{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
 :root{--bg:#0F0F12;--gl:rgba(255,255,255,.06);--st:rgba(255,255,255,.1);--ac:#C6FF3D;--cy:#3DF2FF;--pk:#FF4FD8;--mu:rgba(255,255,255,.55);--gr:linear-gradient(135deg,#C6FF3D,#3DF2FF)}
-html,body{background:var(--bg);color:#F4F4F6;font:600 16px/1.35 Manrope,system-ui,sans-serif;min-height:100%}
+html{background:var(--bg)}
+html,body{color:#F4F4F6;font:600 16px/1.35 Manrope,system-ui,sans-serif;min-height:100%}
 body{padding:calc(14px + env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom));overflow-x:hidden}
 body::before{content:"";position:fixed;top:0;left:0;right:0;bottom:0;z-index:-1;background:radial-gradient(60% 40% at 95% 0,rgba(198,255,61,.14),transparent),radial-gradient(60% 40% at 0 100%,rgba(255,79,216,.13),transparent)}
 button{font-family:inherit;color:inherit;cursor:pointer}
@@ -94,6 +95,30 @@ input:focus{border-color:var(--ac)}
 .c-ft{display:flex;justify-content:space-between;gap:.5em;font-size:.85em;color:rgba(255,255,255,.5);padding-top:1em;border-top:1px solid rgba(255,255,255,.1);font-weight:700}
 #toast{position:fixed;top:calc(16px + env(safe-area-inset-top));left:50%;transform:translate(-50%,-30px);background:#fff;color:#0F0F12;padding:12px 18px;border-radius:99px;font-weight:800;font-size:14px;opacity:0;transition:.3s;z-index:20;pointer-events:none;white-space:nowrap}
 #toast.on{opacity:1;transform:translate(-50%,0)}
+@media (hover:hover){
+.btn:hover{box-shadow:0 10px 36px rgba(198,255,61,.4)}
+.btn.ghost:hover{background:rgba(255,255,255,.1);box-shadow:none}
+.opt:hover{border-color:rgba(198,255,61,.5)}
+.task:hover .cb{border-color:var(--ac)}
+.pro:hover,.ib:hover{border-color:rgba(255,255,255,.35)}
+}
+@media (min-width:501px) and (min-height:561px){
+html{background:#08080b}
+html,body{height:100%}
+body{display:grid;place-items:center;padding:24px;overflow:hidden}
+body::before{background:
+ radial-gradient(45% 55% at 12% 22%,rgba(255,79,216,.22),transparent 70%),
+ radial-gradient(45% 55% at 88% 80%,rgba(198,255,61,.18),transparent 70%),
+ radial-gradient(40% 40% at 86% 12%,rgba(61,242,255,.14),transparent 70%),
+ linear-gradient(160deg,#0d0d14,#08080b 60%,#0c0a10)}
+#phone{position:relative;width:420px;height:min(880px,calc(100dvh - 48px));border-radius:44px;overflow:hidden;border:1px solid rgba(255,255,255,.14);
+ background:radial-gradient(60% 30% at 95% 0,rgba(198,255,61,.14),transparent),radial-gradient(60% 30% at 0 100%,rgba(255,79,216,.13),transparent),var(--bg);
+ box-shadow:0 0 0 6px rgba(255,255,255,.03),0 0 60px rgba(198,255,61,.16),0 0 130px rgba(255,79,216,.18),0 40px 100px rgba(0,0,0,.65)}
+#scroll{height:100%;overflow-y:auto;overscroll-behavior:contain;padding:26px 16px 28px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.18) transparent}
+#app{max-width:none}
+#ov,#toast{position:absolute}
+#toast{top:16px}
+}
 @keyframes rise{from{opacity:0;transform:translateY(18px) scale(.98)}}
 @keyframes pop{40%{transform:scale(1.25)}}
 @keyframes flame{to{transform:scale(1.15) rotate(-6deg)}}
@@ -102,9 +127,11 @@ input:focus{border-color:var(--ac)}
 </style>
 </head>
 <body>
-<div id="app"></div>
-<div id="ov"></div>
-<div id="toast"></div>
+<div id="phone">
+  <div id="scroll"><div id="app"></div></div>
+  <div id="ov"></div>
+  <div id="toast"></div>
+</div>
 <script>
 const tg = window.Telegram && Telegram.WebApp;
 try {
@@ -173,6 +200,7 @@ function winH() {
 }
 function render(anim = true) {
   app.className = anim ? 'enter' : '';
+  if (anim) $('#scroll').scrollTop = 0;
   app.innerHTML = !S ? pickH() : S.won ? winH() : mainH();
   [...app.children].forEach((c, i) => c.style.setProperty('--i', i));
   setTimeout(refresh, 60);
@@ -209,11 +237,12 @@ function openPro() {
   <button class="btn" data-want>Хочу доступ</button><button class="btn ghost" data-close>Позже</button>`);
 }
 function openCard() {
-  const w = Math.max(160, Math.min(270, innerWidth * .74, (innerHeight - 220) * 9 / 16));
+  const ph = $('#phone'), W = Math.min(innerWidth, ph.clientWidth), H = Math.min(innerHeight, ph.clientHeight);
+  const w = Math.max(160, Math.min(270, W * .74, (H - 220) * 9 / 16));
   const li = S.tasks.map(t => `<li class="${S.done[t.id] ? 'y' : ''}"><i>${S.done[t.id] ? '✓' : ''}</i><span>${esc(t.t)}</span></li>`).join('');
   modal(`<div class="cw"><div id="card" style="width:${w}px;height:${w * 16 / 9}px;font-size:${w / 27}px"><div class="c-b1"></div><div class="c-b2"></div>
   <div class="c-in"><div class="c-name">${esc(S.name)}</div><div class="c-day">ДЕНЬ</div><div class="c-big">${S.day} / ${S.total}</div><div class="c-st">🔥 ${S.streak}</div><ul>${li}</ul>
-  <div class="c-ft"><span>${dateStr({day:'numeric',month:'long',year:'numeric'})}</span><span>@monk_tracker_bot</span></div></div></div><img id="shot" alt=""></div>
+  <div class="c-ft"><span>${dateStr({day:'numeric',month:'long',year:'numeric'})}</span><span>@твой_бот_в_тг</span></div></div></div><img id="shot" alt=""></div>
   <p class="mu hint" id="hint"></p><button class="btn" data-dl>⬇ Скачать картинку</button><button class="btn ghost" data-close>Закрыть</button>`);
 }
 async function download(btn) {
